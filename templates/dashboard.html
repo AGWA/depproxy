@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Go Dependency Proxy</title>
+	<style>
+		html, body { background: white; color: black; }
+		a { color: black; text-decoration: underline; }
+		.error { margin: 0; color: red; }
+		table {
+			border: solid black 1px;
+			border-collapse: collapse;
+		}
+		td, th {
+			border: solid black 1px;
+			padding: 0.3rem 0.4rem;
+			text-align: left;
+		}
+		.outofdate {
+			background: #fde;
+		}
+	</style>
+</head>
+<body>
+	<h1>Go Dependency Proxy</h1>
+
+	<table>
+		<thead>
+			<tr><th>Module</th><th>Allowed</th><th>Latest</th><th>Diff</th></tr>
+		</thead>
+		<tbody>
+			{{ range . }}
+				<tr class="{{ if .OutOfDate }}outofdate{{ end }}">
+					<td>
+						{{- if .Module -}}
+							<a href="https://pkg.go.dev/{{ .Module }}">{{ .Module }}</a>
+						{{- else -}}
+							{{ .PathPattern }}
+						{{- end -}}
+					</td>
+					<td>{{ .VersionPattern }}</td>
+					<td>
+						{{- if .LatestErr -}}
+							<p class="error">{{ .LatestErr }}</p>
+						{{- else if .LatestInfo -}}
+							{{ .LatestInfo.Version }}
+						{{- end -}}
+					</td>
+					<td>
+						{{- if .CurrentErr -}}
+							<p class="error">{{ .CurrentErr }}</p>
+						{{- else if .OutOfDate -}}
+							<a href="/diff?module={{ .Module }}&amp;old={{ .CurrentInfo.Version }}&amp;new={{ .LatestInfo.Version }}">Raw</a>
+							<a href="/diff.html?module={{ .Module }}&amp;old={{ .CurrentInfo.Version }}&amp;new={{ .LatestInfo.Version }}">HTML</a>
+							{{ if .VCSDiff }}<a href="{{ .VCSDiff }}">VCS</a>{{ end }}
+						{{- end -}}
+					</td>
+				</tr>
+			{{ end }}
+		</tbody>
+	</table>
+</body>
+</html>

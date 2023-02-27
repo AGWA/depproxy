@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<title>{{ .Module }} from {{ .OldVer }} to {{ .NewVer }}</title>
+	<link rel="stylesheet" href="/assets/highlightjs.css" />
+	<link rel="stylesheet" href="/assets/diff2html.css" />
+	<script type="text/javascript" src="/assets/diff2html.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', async function() {
+			const module = document.body.dataset.module;
+			const oldVer = document.body.dataset.oldVer;
+			const newVer = document.body.dataset.newVer;
+			const query = new URLSearchParams({module: module, old: oldVer, new: newVer});
+			const response = await fetch('/diff?' + query.toString());
+			const diff = await response.text();
+			const target = document.getElementById('diff');
+			const config = {
+				srcPrefix: module+'@'+oldVer+'/',
+				dstPrefix: module+'@'+newVer+'/',
+				drawFileList: true,
+				matching: 'lines',
+			};
+			const ui = new Diff2HtmlUI(target, diff, config);
+			ui.draw();
+		});
+	</script>
+</head>
+<body data-module="{{ .Module }}" data-old-ver="{{ .OldVer }}" data-new-ver="{{ .NewVer }}">
+<div id="diff"></div>
+</body>
+</html>
