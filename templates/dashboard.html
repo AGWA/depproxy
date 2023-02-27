@@ -32,13 +32,19 @@
 			{{ range . }}
 				<tr class="{{ if .OutOfDate }}outofdate{{ end }}">
 					<td>
-						{{- if .Module -}}
-							<a href="https://pkg.go.dev/{{ .Module }}">{{ .Module }}</a>
+						{{- if .Path.IsSet -}}
+							<a href="https://pkg.go.dev/{{ .Path }}">{{ .Path }}</a>
 						{{- else -}}
 							{{ .PathPattern }}
 						{{- end -}}
 					</td>
-					<td>{{ .VersionPattern }}</td>
+					<td>
+						{{- if .Version.IsSet -}}
+							{{ .Version }}
+						{{- else -}}
+							*
+						{{- end -}}
+					</td>
 					<td>
 						{{- if .LatestErr -}}
 							<p class="error">{{ .LatestErr }}</p>
@@ -50,8 +56,8 @@
 						{{- if .CurrentErr -}}
 							<p class="error">{{ .CurrentErr }}</p>
 						{{- else if .OutOfDate -}}
-							<a href="/diff?module={{ .Module }}&amp;old={{ .CurrentInfo.Version }}&amp;new={{ .LatestInfo.Version }}">Raw</a>
-							<a href="/diff.html?module={{ .Module }}&amp;old={{ .CurrentInfo.Version }}&amp;new={{ .LatestInfo.Version }}">HTML</a>
+							<a href="/diff?module={{ .Path }}&amp;old={{ .CurrentInfo.Version }}&amp;new={{ .LatestInfo.Version }}">Raw</a>
+							<a href="/diff.html?module={{ .Path }}&amp;old={{ .CurrentInfo.Version }}&amp;new={{ .LatestInfo.Version }}">HTML</a>
 							{{ if .VCSDiff }}<a href="{{ .VCSDiff }}">VCS</a>{{ end }}
 						{{- end -}}
 					</td>

@@ -5,7 +5,15 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-type ModuleVersion string // holds a valid module version
+type ModuleVersion string // if not empty, holds a valid module version
+
+func (version ModuleVersion) IsEmpty() bool {
+	return version == ""
+}
+
+func (version ModuleVersion) IsSet() bool {
+	return version != ""
+}
 
 func (version ModuleVersion) String() string {
 	return string(version)

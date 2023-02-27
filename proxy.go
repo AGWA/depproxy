@@ -11,17 +11,21 @@ import (
 	"src.agwa.name/depproxy/goproxy"
 )
 
-func (s *Server) requestListFromUpstream(ctx context.Context, module goproxy.ModulePath) ([]string, error) {
+func (s *Server) requestListFromUpstream(ctx context.Context, module goproxy.ModulePath) ([]goproxy.ModuleVersion, error) {
 	resp, err := s.requestUpstream(ctx, module, goproxy.ListRequest{})
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	versions := []string{}
+	versions := []goproxy.ModuleVersion{}
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
-		versions = append(versions, scanner.Text())
+		version, err := goproxy.MakeModuleVersion(scanner.Text())
+		if err != nil {
+			return nil, fmt.Errorf("malformed version in list response: %w", err)
+		}
+		versions = append(versions, version)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -30,15 +34,13 @@ func (s *Server) requestListFromUpstream(ctx context.Context, module goproxy.Mod
 }
 
 func (s *Server) serveLatestRequest(ctx context.Context, w http.ResponseWriter, module goproxy.ModulePath) {
-	allowedVersionPattern := s.getAllowedVersionPattern(module.String())
-	if allowedVersionPattern == "" {
+	allowedModule := s.getAllowedModule(module)
+	if allowedModule == nil {
 		http.Error(w, fmt.Sprintf("Module %q is not allowed", module), http.StatusForbidden)
-	} else if allowedVersionPattern == "*" {
+	} else if allowedModule.Version.IsEmpty() {
 		s.redirectUpstream(w, module, goproxy.LatestRequest{})
-	} else if version, err := goproxy.MakeModuleVersion(allowedVersionPattern); err == nil {
-		s.redirectUpstream(w, module, goproxy.InfoRequest{Version: version})
 	} else {
-		http.Error(w, fmt.Sprintf("Module %q has allowed version: %s", module, err), http.StatusInternalServerError)
+		s.redirectUpstream(w, module, goproxy.InfoRequest{Version: allowedModule.Version})
 	}
 }
 
@@ -58,7 +60,7 @@ func (s *Server) serveListRequest(ctx context.Context, w http.ResponseWriter, mo
 	w.WriteHeader(http.StatusOK)
 
 	for _, version := range versions {
-		if s.isModuleAllowed(module.String(), version) {
+		if s.isModuleAllowed(module, version) {
 			fmt.Fprintln(w, version)
 		}
 	}
@@ -84,7 +86,7 @@ func (s *Server) serveProxyRequest(w http.ResponseWriter, httpReq *http.Request)
 	case goproxy.ModRequest:
 		s.redirectUpstream(w, module, request)
 	case goproxy.ZipRequest:
-		if s.isModuleAllowed(module.String(), request.Version.String()) {
+		if s.isModuleAllowed(module, request.Version) {
 			s.redirectUpstream(w, module, request)
 		} else {
 			http.Error(w, fmt.Sprintf("Version %q of module %q is not allowed", request.Version, module), http.StatusForbidden)

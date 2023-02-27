@@ -4,7 +4,15 @@ import (
 	"golang.org/x/mod/module"
 )
 
-type ModulePath string // holds a valid module path
+type ModulePath string // if not empty, holds a valid module path
+
+func (path ModulePath) IsEmpty() bool {
+	return path == ""
+}
+
+func (path ModulePath) IsSet() bool {
+	return path != ""
+}
 
 func (path ModulePath) String() string {
 	return string(path)

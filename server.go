@@ -20,18 +20,18 @@ type Server struct {
 	AllowedModules []AllowedModule
 }
 
-func (s *Server) getAllowedVersionPattern(path string) string {
+func (s *Server) getAllowedModule(path goproxy.ModulePath) *AllowedModule {
 	for _, m := range s.AllowedModules {
-		if matched, _ := m.matchesPath(path); matched {
-			return m.VersionPattern
+		if m.matchesPath(path) {
+			return &m
 		}
 	}
-	return ""
+	return nil
 }
 
-func (s *Server) isModuleAllowed(path, version string) bool {
+func (s *Server) isModuleAllowed(path goproxy.ModulePath, version goproxy.ModuleVersion) bool {
 	for _, m := range s.AllowedModules {
-		if matched, _ := m.matches(path, version); matched {
+		if m.matches(path, version) {
 			return true
 		}
 	}

@@ -4,35 +4,34 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"path/filepath"
+	"path"
 	"strings"
+
+	"src.agwa.name/depproxy/goproxy"
 )
 
 type AllowedModule struct {
-	PathPattern    string
-	VersionPattern string
+	// Exactly one of Path and PathPattern are set
+	Path        goproxy.ModulePath
+	PathPattern string                // if set, is a valid path.Pattern
+	Version     goproxy.ModuleVersion // if not set, all versions are allowed
 }
 
-func (m *AllowedModule) matchesPath(path string) (bool, error) {
-	matched, err := filepath.Match(m.PathPattern, path)
-	if err != nil {
-		return false, fmt.Errorf("path pattern %q is malformed", m.PathPattern)
+func (module *AllowedModule) matchesPath(modulePath goproxy.ModulePath) bool {
+	if module.Path.IsSet() {
+		return module.Path == modulePath
+	} else {
+		matched, _ := path.Match(module.PathPattern, modulePath.String())
+		return matched
 	}
-	return matched, nil
 }
 
-func (m *AllowedModule) matches(path, version string) (bool, error) {
-	if matched, err := m.matchesPath(path); err != nil {
-		return false, err
-	} else if !matched {
-		return false, nil
-	}
-	if matched, err := filepath.Match(m.VersionPattern, version); err != nil {
-		return false, fmt.Errorf("version pattern %q is malformed", m.VersionPattern)
-	} else if !matched {
-		return false, nil
-	}
-	return true, nil
+func (m *AllowedModule) matchesVersion(version goproxy.ModuleVersion) bool {
+	return m.Version.IsEmpty() || m.Version == version
+}
+
+func (m *AllowedModule) matches(path goproxy.ModulePath, version goproxy.ModuleVersion) bool {
+	return m.matchesPath(path) && m.matchesVersion(version)
 }
 
 func ReadAllowedModules(r io.Reader) ([]AllowedModule, error) {
@@ -53,10 +52,34 @@ func ReadAllowedModules(r io.Reader) ([]AllowedModule, error) {
 		} else if len(f) != 2 {
 			return nil, fmt.Errorf("syntax error on line %d: two fields expected, but %d provided", lineno, len(f))
 		}
-		modules = append(modules, AllowedModule{
-			PathPattern:    f[0],
-			VersionPattern: f[1],
-		})
+
+		var module AllowedModule
+		if strings.Contains(f[0], "*") {
+			if _, err := path.Match(f[0], ""); err != nil {
+				return nil, fmt.Errorf("syntax error on line %d: module path pattern is invalid", lineno)
+			}
+			module.PathPattern = f[0]
+		} else {
+			modulePath, err := goproxy.MakeModulePath(f[0])
+			if err != nil {
+				return nil, fmt.Errorf("syntax error on line %d: %w", lineno, err)
+			}
+			module.Path = modulePath
+		}
+
+		if f[1] != "*" {
+			moduleVersion, err := goproxy.MakeModuleVersion(f[1])
+			if err != nil {
+				return nil, fmt.Errorf("syntax error on line %d: %w", lineno, err)
+			}
+			module.Version = moduleVersion
+		}
+
+		if module.PathPattern != "" && module.Version.IsSet() {
+			return nil, fmt.Errorf("error on line %d: version must be '*' when a path pattern is used", lineno)
+		}
+
+		modules = append(modules, module)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err

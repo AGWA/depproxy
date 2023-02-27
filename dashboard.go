@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"strings"
 
 	"golang.org/x/sync/errgroup"
 	"src.agwa.name/depproxy/goproxy"
@@ -17,7 +16,6 @@ var dashboardTemplate = template.Must(template.ParseFS(content, "templates/dashb
 
 type allowedModuleInfo struct {
 	AllowedModule
-	Module      goproxy.ModulePath
 	CurrentInfo *goproxy.ModuleInfo
 	CurrentErr  error
 	LatestInfo  *goproxy.ModuleInfo
@@ -77,30 +75,17 @@ func (s *Server) getAllowedModulesInfo(ctx context.Context) ([]allowedModuleInfo
 				return ctx.Err()
 			}
 			modules[i].AllowedModule = s.AllowedModules[i]
-			if strings.Contains(modules[i].PathPattern, "*") {
+			if modules[i].Path.IsEmpty() {
 				continue
 			}
-			module, err := goproxy.MakeModulePath(modules[i].PathPattern)
-			if err != nil {
-				modules[i].CurrentErr = err
-				continue
-			}
-
-			modules[i].Module = module
-
-			if !strings.Contains(modules[i].VersionPattern, "*") {
-				currentVersion, err := goproxy.MakeModuleVersion(modules[i].VersionPattern)
-				if err != nil {
-					modules[i].CurrentErr = err
-				} else {
-					group.Go(func() error {
-						modules[i].CurrentInfo, modules[i].CurrentErr = s.getModuleInfo(ctx, module, currentVersion)
-						return nil
-					})
-				}
+			if modules[i].Version.IsSet() {
+				group.Go(func() error {
+					modules[i].CurrentInfo, modules[i].CurrentErr = s.getModuleInfo(ctx, modules[i].Path, modules[i].Version)
+					return nil
+				})
 			}
 			group.Go(func() error {
-				modules[i].LatestInfo, modules[i].LatestErr = s.getLatestModuleInfo(ctx, module)
+				modules[i].LatestInfo, modules[i].LatestErr = s.getLatestModuleInfo(ctx, modules[i].Path)
 				return nil
 			})
 		}
