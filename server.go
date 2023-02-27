@@ -38,14 +38,14 @@ func (s *Server) isModuleAllowed(path, version string) bool {
 	return false
 }
 
-func (s *Server) redirectUpstream(w http.ResponseWriter, module goproxy.ModulePath, req proxyRequest) {
-	url := s.UpstreamProxy.JoinPath(module.Escaped(), req.path())
+func (s *Server) redirectUpstream(w http.ResponseWriter, module goproxy.ModulePath, req goproxy.Request) {
+	url := s.UpstreamProxy.JoinPath(module.Escaped(), req.Path())
 	w.Header().Set("Location", url.String())
 	w.WriteHeader(http.StatusSeeOther)
 }
 
-func (s *Server) requestUpstream(ctx context.Context, module goproxy.ModulePath, req proxyRequest) (*http.Response, error) {
-	url := s.UpstreamProxy.JoinPath(module.Escaped(), req.path())
+func (s *Server) requestUpstream(ctx context.Context, module goproxy.ModulePath, req goproxy.Request) (*http.Response, error) {
+	url := s.UpstreamProxy.JoinPath(module.Escaped(), req.Path())
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err

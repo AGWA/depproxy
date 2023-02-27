@@ -21,7 +21,7 @@ import (
 var diffTemplate = template.Must(template.ParseFS(content, "templates/diff.html"))
 
 func (s *Server) downloadUpstreamZip(ctx context.Context, module goproxy.ModulePath, version goproxy.ModuleVersion) (*zip.Reader, error) {
-	resp, err := s.requestUpstream(ctx, module, zipRequest{Version: version})
+	resp, err := s.requestUpstream(ctx, module, goproxy.ZipRequest{Version: version})
 	if err != nil {
 		return nil, fmt.Errorf("error communicating with upstream proxy: %w", err)
 	}

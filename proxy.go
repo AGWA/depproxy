@@ -12,7 +12,7 @@ import (
 )
 
 func (s *Server) requestListFromUpstream(ctx context.Context, module goproxy.ModulePath) ([]string, error) {
-	resp, err := s.requestUpstream(ctx, module, listRequest{})
+	resp, err := s.requestUpstream(ctx, module, goproxy.ListRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -34,9 +34,9 @@ func (s *Server) serveLatestRequest(ctx context.Context, w http.ResponseWriter, 
 	if allowedVersionPattern == "" {
 		http.Error(w, fmt.Sprintf("Module %q is not allowed", module), http.StatusForbidden)
 	} else if allowedVersionPattern == "*" {
-		s.redirectUpstream(w, module, latestRequest{})
+		s.redirectUpstream(w, module, goproxy.LatestRequest{})
 	} else if version, err := goproxy.MakeModuleVersion(allowedVersionPattern); err == nil {
-		s.redirectUpstream(w, module, infoRequest{Version: version})
+		s.redirectUpstream(w, module, goproxy.InfoRequest{Version: version})
 	} else {
 		http.Error(w, fmt.Sprintf("Module %q has allowed version: %s", module, err), http.StatusInternalServerError)
 	}
@@ -69,21 +69,21 @@ func (s *Server) serveProxyRequest(w http.ResponseWriter, httpReq *http.Request)
 		http.Error(w, "sumdb is not proxied", http.StatusNotFound)
 		return
 	}
-	module, request, err := parseProxyPath(strings.TrimPrefix(httpReq.URL.Path, "/proxy/"))
+	module, request, err := goproxy.ParseRequestPath(strings.TrimPrefix(httpReq.URL.Path, "/proxy/"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	switch request := request.(type) {
-	case latestRequest:
+	case goproxy.LatestRequest:
 		s.serveLatestRequest(httpReq.Context(), w, module)
-	case listRequest:
+	case goproxy.ListRequest:
 		s.serveListRequest(httpReq.Context(), w, module)
-	case infoRequest:
+	case goproxy.InfoRequest:
 		s.redirectUpstream(w, module, request)
-	case modRequest:
+	case goproxy.ModRequest:
 		s.redirectUpstream(w, module, request)
-	case zipRequest:
+	case goproxy.ZipRequest:
 		if s.isModuleAllowed(module.String(), request.Version.String()) {
 			s.redirectUpstream(w, module, request)
 		} else {

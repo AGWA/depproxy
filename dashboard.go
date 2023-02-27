@@ -59,11 +59,11 @@ func processModuleInfoResponse(resp *http.Response, err error) (*goproxy.ModuleI
 }
 
 func (s *Server) getModuleInfo(ctx context.Context, module goproxy.ModulePath, version goproxy.ModuleVersion) (*goproxy.ModuleInfo, error) {
-	return processModuleInfoResponse(s.requestUpstream(ctx, module, infoRequest{Version: version}))
+	return processModuleInfoResponse(s.requestUpstream(ctx, module, goproxy.InfoRequest{Version: version}))
 }
 
 func (s *Server) getLatestModuleInfo(ctx context.Context, module goproxy.ModulePath) (*goproxy.ModuleInfo, error) {
-	return processModuleInfoResponse(s.requestUpstream(ctx, module, latestRequest{}))
+	return processModuleInfoResponse(s.requestUpstream(ctx, module, goproxy.LatestRequest{}))
 }
 
 func (s *Server) getAllowedModulesInfo(ctx context.Context) ([]allowedModuleInfo, error) {
