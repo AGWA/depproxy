@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	"golang.org/x/sync/errgroup"
+	vulnclient "golang.org/x/vuln/client"
+	"golang.org/x/vuln/osv"
 	"src.agwa.name/depproxy/goproxy"
 )
 
@@ -18,6 +20,8 @@ type allowedModuleInfo struct {
 	AllowedModule
 	CurrentInfo *goproxy.ModuleInfo
 	CurrentErr  error
+	Vulns       []*osv.Entry
+	VulnsErr    error
 	LatestInfo  *goproxy.ModuleInfo
 	LatestErr   error
 }
@@ -64,6 +68,33 @@ func (s *Server) getLatestModuleInfo(ctx context.Context, module goproxy.ModuleP
 	return processModuleInfoResponse(s.requestUpstream(ctx, module, goproxy.LatestRequest{}))
 }
 
+func vulnAffects(entry *osv.Entry, version goproxy.ModuleVersion) bool {
+	for _, affected := range entry.Affected {
+		if affected.Ranges.AffectsSemver(version.String()) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) getVulnsAffecting(ctx context.Context, module goproxy.ModulePath, version goproxy.ModuleVersion) ([]*osv.Entry, error) {
+	client, err := vulnclient.NewClient([]string{"https://vuln.go.dev"}, vulnclient.Options{})
+	if err != nil {
+		return nil, err
+	}
+	allEntries, err := client.GetByModule(ctx, module.String())
+	if err != nil {
+		return nil, err
+	}
+	entries := allEntries[:0]
+	for _, entry := range allEntries {
+		if vulnAffects(entry, version) {
+			entries = append(entries, entry)
+		}
+	}
+	return entries, nil
+}
+
 func (s *Server) getAllowedModulesInfo(ctx context.Context) ([]allowedModuleInfo, error) {
 	modules := make([]allowedModuleInfo, len(s.AllowedModules))
 	group, ctx := errgroup.WithContext(ctx)
@@ -81,6 +112,10 @@ func (s *Server) getAllowedModulesInfo(ctx context.Context) ([]allowedModuleInfo
 			if modules[i].Version.IsSet() {
 				group.Go(func() error {
 					modules[i].CurrentInfo, modules[i].CurrentErr = s.getModuleInfo(ctx, modules[i].Path, modules[i].Version)
+					return nil
+				})
+				group.Go(func() error {
+					modules[i].Vulns, modules[i].VulnsErr = s.getVulnsAffecting(ctx, modules[i].Path, modules[i].Version)
 					return nil
 				})
 			}
