@@ -51,7 +51,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
 		flag.PrintDefaults()
-		fmt.Fprintf(flag.CommandLine.Output(), "The allowlist file should contain lines consisting of: module pattern, whitespace, version pattern\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Each line of the allowlist file must contain a module pattern and version pattern, separated by whitespace\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "For go-listener syntax, see https://pkg.go.dev/src.agwa.name/go-listener#section-readme\n")
 	}
 	flag.StringVar(&flags.allowlist, "allowlist", "", "Path to allowed modules list")
