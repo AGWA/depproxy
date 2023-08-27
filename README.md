@@ -72,9 +72,9 @@ After you set `GOPROXY`, the go command will only be able to download modules an
 
 Visit your depproxy instance in a web browser to see if any of your authorized modules have newer versions.  If a newer version is available, the module will be highlighted in red and the following functions will be available to help you vet the new version:
 
-* *Raw* - view a raw diff between the authorized version and the latest version
-* *HTML* - view an HTML diff between the authorized version and the latest version
-* *VCS* - view a changelog between the authorized version and the latest version in the module's version control system (only available if the module is hosted on GitHub; not available with older module versions)
+* **Raw** - view a raw diff between the authorized version and the latest version
+* **HTML** - view an HTML diff between the authorized version and the latest version
+* **VCS** - view a changelog between the authorized version and the latest version in the module's version control system (only available if the module is hosted on GitHub; not available with older module versions)
 
 After vetting the new version, edit your allowlist to specify the new version and restart depproxy.
 
