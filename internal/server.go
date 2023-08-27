@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"src.agwa.name/depproxy/goproxy"
+	"src.agwa.name/depproxy/internal/goproxy"
 )
 
 //go:embed assets/* templates/*

@@ -5,7 +5,7 @@ depproxy is a Go module proxy that protects you from supply chain attacks by onl
 ## Installing
 
 ```
-go install src.agwa.name/depproxy/cmd/depproxy@latest
+go install src.agwa.name/depproxy@latest
 ```
 
 Or, you can download a binary from the [GitHub Releases Page](https://github.com/AGWA/depproxy/releases).

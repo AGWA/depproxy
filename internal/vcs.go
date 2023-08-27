@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"src.agwa.name/depproxy/goproxy"
+	"src.agwa.name/depproxy/internal/goproxy"
 )
 
 func vcsDiff(vcs string, url string, oldOrigin, newOrigin *goproxy.ModuleOrigin) string {

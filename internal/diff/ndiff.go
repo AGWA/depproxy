@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"unicode/utf8"
 
-	"src.agwa.name/depproxy/diff/lcs"
+	"src.agwa.name/depproxy/internal/diff/lcs"
 )
 
 // Strings computes the differences between two strings.

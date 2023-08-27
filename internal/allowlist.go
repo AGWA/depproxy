@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"src.agwa.name/depproxy/goproxy"
+	"src.agwa.name/depproxy/internal/goproxy"
 )
 
 type AllowedModule struct {

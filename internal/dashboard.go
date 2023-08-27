@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"golang.org/x/sync/errgroup"
-	"src.agwa.name/depproxy/goproxy"
+	"src.agwa.name/depproxy/internal/goproxy"
 )
 
 var dashboardTemplate = template.Must(template.ParseFS(content, "templates/dashboard.html"))

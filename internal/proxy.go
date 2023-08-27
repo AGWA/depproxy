@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"src.agwa.name/depproxy/goproxy"
+	"src.agwa.name/depproxy/internal/goproxy"
 )
 
 func (s *Server) requestListFromUpstream(ctx context.Context, module goproxy.ModulePath) ([]goproxy.ModuleVersion, error) {

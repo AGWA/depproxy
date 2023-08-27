@@ -8,7 +8,7 @@ package myers
 import (
 	"strings"
 
-	"src.agwa.name/depproxy/diff"
+	"src.agwa.name/depproxy/internal/diff"
 )
 
 // Sources:

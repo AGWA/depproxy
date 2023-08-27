@@ -15,7 +15,7 @@ import (
 	"src.agwa.name/go-listener"
 	_ "src.agwa.name/go-listener/tls"
 
-	"src.agwa.name/depproxy"
+	"src.agwa.name/depproxy/internal"
 )
 
 func usageError(message string) {

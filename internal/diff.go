@@ -13,9 +13,9 @@ import (
 	"sync"
 
 	"golang.org/x/exp/slices"
-	"src.agwa.name/depproxy/diff"
-	"src.agwa.name/depproxy/diff/myers"
-	"src.agwa.name/depproxy/goproxy"
+	"src.agwa.name/depproxy/internal/diff"
+	"src.agwa.name/depproxy/internal/diff/myers"
+	"src.agwa.name/depproxy/internal/goproxy"
 )
 
 var diffTemplate = template.Must(template.ParseFS(content, "templates/diff.html"))
