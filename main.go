@@ -52,7 +52,7 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
 		flag.PrintDefaults()
 		fmt.Fprintf(flag.CommandLine.Output(), "Each line of the allowlist file must contain a module pattern and version pattern, separated by whitespace\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "For go-listener syntax, see https://pkg.go.dev/src.agwa.name/go-listener#section-readme\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "For go-listener syntax, see https://pkg.go.dev/src.agwa.name/go-listener#readme-listener-syntax\n")
 	}
 	flag.StringVar(&flags.allowlist, "allowlist", "", "Path to allowed modules list")
 	flag.Func("listen", "Socket to listen on, in go-listener syntax (repeatable)", func(arg string) error {
