@@ -28,6 +28,7 @@ package depproxy
 import (
 	"archive/zip"
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -35,9 +36,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"slices"
 	"sync"
 
-	"golang.org/x/exp/slices"
 	"src.agwa.name/depproxy/internal/diff"
 	"src.agwa.name/depproxy/internal/diff/myers"
 	"src.agwa.name/depproxy/internal/goproxy"
@@ -106,11 +107,11 @@ func makeFileDiff(oldLabel, newLabel string, openOldFile, openNewFile func() (io
 }
 
 func makeDiff(module string, oldVer, newVer string, oldFiles, newFiles []*zip.File) (string, error) {
-	slices.SortFunc(oldFiles, func(a, b *zip.File) bool {
-		return trimZipFilePrefix(a.Name, module, oldVer) < trimZipFilePrefix(b.Name, module, oldVer)
+	slices.SortFunc(oldFiles, func(a, b *zip.File) int {
+		return cmp.Compare(trimZipFilePrefix(a.Name, module, oldVer), trimZipFilePrefix(b.Name, module, oldVer))
 	})
-	slices.SortFunc(newFiles, func(a, b *zip.File) bool {
-		return trimZipFilePrefix(a.Name, module, newVer) < trimZipFilePrefix(b.Name, module, newVer)
+	slices.SortFunc(newFiles, func(a, b *zip.File) int {
+		return cmp.Compare(trimZipFilePrefix(a.Name, module, newVer), trimZipFilePrefix(b.Name, module, newVer))
 	})
 
 	var fullDiff strings.Builder
