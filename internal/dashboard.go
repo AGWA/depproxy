@@ -32,12 +32,18 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"runtime/debug"
 
 	"golang.org/x/sync/errgroup"
 	"src.agwa.name/depproxy/internal/goproxy"
 )
 
 var dashboardTemplate = template.Must(template.ParseFS(content, "templates/dashboard.html"))
+
+type dashboard struct {
+	Modules   []allowedModuleInfo
+	BuildInfo *debug.BuildInfo
+}
 
 type allowedModuleInfo struct {
 	AllowedModule
@@ -137,14 +143,19 @@ func (s *Server) serveDashboard(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	modules, err := s.getAllowedModulesInfo(req.Context())
-	if err != nil {
+
+	var dash dashboard
+	dash.BuildInfo, _ = debug.ReadBuildInfo()
+	if modules, err := s.getAllowedModulesInfo(req.Context()); err != nil {
 		http.Error(w, fmt.Sprintf("error getting allowed modules info: %s", err), http.StatusInternalServerError)
 		return
+	} else {
+		dash.Modules = modules
 	}
+
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Xss-Protection", "0")
 	w.WriteHeader(http.StatusOK)
-	dashboardTemplate.Execute(w, modules)
+	dashboardTemplate.Execute(w, dash)
 }

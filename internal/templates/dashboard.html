@@ -19,6 +19,9 @@
 		.outofdate {
 			background: #fde;
 		}
+		.buildinfo {
+			font-style: italic;
+		}
 	</style>
 </head>
 <body>
@@ -29,7 +32,7 @@
 			<tr><th>Module</th><th>Allowed</th><th>Latest</th><th>Diff</th></tr>
 		</thead>
 		<tbody>
-			{{ range . }}
+			{{ range .Modules }}
 				<tr class="{{ if .OutOfDate }}outofdate{{ end }}">
 					<td>
 						{{- if .Path.IsSet -}}
@@ -65,5 +68,8 @@
 			{{ end }}
 		</tbody>
 	</table>
+	{{ if .BuildInfo }}
+		<p class="buildinfo">{{ .BuildInfo.Main.Path }}@{{ .BuildInfo.Main.Version }} ({{ .BuildInfo.Main.Sum }})</p>
+	{{ end }}
 </body>
 </html>
