@@ -1,6 +1,6 @@
 module src.agwa.name/depproxy
 
-go 1.22.1
+go 1.24.4
 
 require (
 	golang.org/x/mod v0.16.0
