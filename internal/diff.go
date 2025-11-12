@@ -35,8 +35,8 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"strings"
 	"slices"
+	"strings"
 	"sync"
 
 	"src.agwa.name/depproxy/internal/diff"
