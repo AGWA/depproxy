@@ -107,6 +107,19 @@ func makeFileDiff(oldLabel, newLabel string, openOldFile, openNewFile func() (io
 }
 
 func makeDiff(module string, oldVer, newVer string, oldFiles, newFiles []*zip.File) (string, error) {
+	compareName := func(oldPos, newPos int) int {
+		if oldPos == len(oldFiles) {
+			return +1
+		} else if newPos == len(newFiles) {
+			return -1
+		}
+
+		return strings.Compare(
+			trimZipFilePrefix(oldFiles[oldPos].Name, module, oldVer),
+			trimZipFilePrefix(newFiles[newPos].Name, module, newVer),
+		)
+	}
+
 	slices.SortFunc(oldFiles, func(a, b *zip.File) int {
 		return cmp.Compare(trimZipFilePrefix(a.Name, module, oldVer), trimZipFilePrefix(b.Name, module, oldVer))
 	})
@@ -120,17 +133,18 @@ func makeDiff(module string, oldVer, newVer string, oldFiles, newFiles []*zip.Fi
 	for oldPos < len(oldFiles) || newPos < len(newFiles) {
 		var fileDiff string
 		var err error
-		if oldPos == len(oldFiles) || trimZipFilePrefix(newFiles[newPos].Name, module, newVer) < trimZipFilePrefix(oldFiles[oldPos].Name, module, oldVer) {
+		switch compareName(oldPos, newPos) {
+		case +1:
 			// newFiles[newPos].Name not in oldFiles
 			newFile := newFiles[newPos]
 			fileDiff, err = makeFileDiff("/dev/null", newFile.Name, openNullReadCloser, newFile.Open)
 			newPos++
-		} else if newPos == len(newFiles) || trimZipFilePrefix(oldFiles[oldPos].Name, module, oldVer) < trimZipFilePrefix(newFiles[newPos].Name, module, newVer) {
+		case -1:
 			// oldFiles[oldPos].Name not in newFiles
 			oldFile := oldFiles[oldPos]
 			fileDiff, err = makeFileDiff(oldFile.Name, "/dev/null", oldFile.Open, openNullReadCloser)
 			oldPos++
-		} else {
+		case 0:
 			oldFile := oldFiles[oldPos]
 			newFile := newFiles[newPos]
 			fileDiff, err = makeFileDiff(oldFile.Name, newFile.Name, oldFile.Open, newFile.Open)
